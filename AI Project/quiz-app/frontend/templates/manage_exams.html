@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quizora | Manage Exams</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="app-layout">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-logo">
+                <img src="{{ url_for('static', filename='img/logo.png') }}" class="logo-img" alt="Quizora Logo">
+                <h1>Quizora <span class="ai-badge">AI</span></h1>
+            </div>
+
+            <div class="sidebar-section-title">Navigation</div>
+            <nav class="sidebar-nav">
+                <a href="/admin_dashboard" class="nav-item active">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+                    Admin Dashboard
+                </a>
+                <a href="/settings" class="nav-item">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+                    Settings
+                </a>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <div class="top-header">
+                <div class="header-left">
+                    <span>Manage Exams System</span>
+                </div>
+                <div class="header-right">
+                    <button class="btn secondary-btn small-btn" onclick="window.location.href='/admin_dashboard'">Back</button>
+                    <button class="btn secondary-btn small-btn" onclick="handleLogout()">Logout</button>
+                </div>
+            </div>
+
+            <div class="content-area">
+                <h1 class="page-title">Manage Formal Exams</h1>
+
+                <div class="artifact-card mb-2">
+                    <h3 style="margin-bottom: 1rem;">Create New Exam</h3>
+                    <form id="create-exam-form" onsubmit="handleCreateExam(event)">
+                        <div class="grid-2">
+                            <div>
+                                <label>Exam Title</label>
+                                <input type="text" id="ex-title" required placeholder="e.g. Midterm Computer Science">
+                            </div>
+                            <div>
+                                <label>Category / Topic</label>
+                                <input type="text" id="ex-category" required placeholder="e.g. Computer Science">
+                            </div>
+                            <div>
+                                <label>Duration (Minutes)</label>
+                                <input type="number" id="ex-duration" required min="1" value="30">
+                            </div>
+                            <div>
+                                <label>Total Marks</label>
+                                <input type="number" id="ex-total" required min="1" value="100">
+                            </div>
+                            <div>
+                                <label>Passing Marks</label>
+                                <input type="number" id="ex-passing" required min="1" value="50">
+                            </div>
+                        </div>
+                        <button type="submit" class="btn primary-btn mt-1" style="width: 100%;">Create Exam Blueprint</button>
+                    </form>
+                </div>
+
+                <div class="artifact-card">
+                    <h3 style="margin-bottom: 1rem;">Existing Exams</h3>
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Title</th>
+                                <th>Category</th>
+                                <th>Duration</th>
+                                <th>Passing</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="exam-list-body">
+                            <!-- Loaded via JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", loadExams);
+
+        async function loadExams() {
+            try {
+                const res = await fetch('/api/exams');
+                const exams = await res.json();
+                const tbody = document.getElementById('exam-list-body');
+                tbody.innerHTML = '';
+                exams.forEach(ex => {
+                    tbody.innerHTML += `
+                        <tr>
+                            <td>${ex.id}</td>
+                            <td style="color: white; font-weight: 500;">${ex.title}</td>
+                            <td>${ex.category}</td>
+                            <td>${ex.duration_minutes}m</td>
+                            <td>${ex.passing_marks}/${ex.total_marks}</td>
+                            <td>
+                                <button class="btn danger-btn small-btn" onclick="deleteExam(${ex.id})">Delete</button>
+                            </td>
+                        </tr>
+                    `;
+                });
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        async function handleCreateExam(e) {
+            e.preventDefault();
+            const data = {
+                title: document.getElementById('ex-title').value,
+                category: document.getElementById('ex-category').value,
+                duration_minutes: parseInt(document.getElementById('ex-duration').value),
+                total_marks: parseInt(document.getElementById('ex-total').value),
+                passing_marks: parseInt(document.getElementById('ex-passing').value)
+            };
+
+            try {
+                const res = await fetch('/api/exams', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                const result = await res.json();
+                if (result.success) {
+                    alert('Exam created successfully.');
+                    e.target.reset();
+                    loadExams();
+                } else {
+                    alert(result.error);
+                }
+            } catch (err) {
+                console.error(err);
+                alert("An error occurred");
+            }
+        }
+
+        async function deleteExam(id) {
+            if(!confirm("Are you sure? This will delete the exam and all associated questions.")) return;
+            try {
+                const res = await fetch(`/api/exams/${id}`, { method: 'DELETE' });
+                const result = await res.json();
+                if (result.success) {
+                    loadExams();
+                } else {
+                    alert(result.error);
+                }
+            } catch(err) {
+                console.error(err);
+            }
+        }
+    </script>
+</body>
+</html>

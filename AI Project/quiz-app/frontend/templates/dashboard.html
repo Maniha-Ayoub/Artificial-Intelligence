@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quizora | Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        .topic-input-wrapper { display: flex; gap: 1rem; margin-bottom: 1.5rem; }
+        .pdf-upload-section { padding-top: 1.5rem; border-top: 1px dashed var(--border-color); }
+        .exam-item { background: rgba(0, 0, 0, 0.3); padding: 1rem; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; border: 1px solid var(--border-subtle); margin-bottom: 0.5rem; }
+    </style>
+</head>
+<body>
+    <div class="app-layout">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-logo">
+                <img src="{{ url_for('static', filename='img/logo.png') }}" class="logo-img" alt="Quizora Logo">
+                <h1>Quizora <span class="ai-badge">AI</span></h1>
+            </div>
+
+            <div class="sidebar-section-title">Navigation</div>
+            <nav class="sidebar-nav">
+                <a href="/dashboard" class="nav-item active">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+                    Student UX
+                </a>
+                <a href="/history" class="nav-item">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                    History
+                </a>
+                <a href="#" class="nav-item" onclick="showLeaderboard()">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path></svg>
+                    Leaderboard
+                </a>
+                <a href="/settings" class="nav-item">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+                    Settings
+                </a>
+            </nav>
+            
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <div class="top-header">
+                <div class="header-left">
+                    <span>Design Blueprint v1.0 • Welcome, {{ name }}</span>
+                </div>
+                <div class="header-right">
+                    <div class="status-badge ai-powered">AI-POWERED</div>
+                    <div class="status-badge enterprise">ENTERPRISE READY</div>
+                    <button class="btn secondary-btn small-btn" onclick="handleLogout()">Logout</button>
+                </div>
+            </div>
+
+            <div class="content-area">
+                <h1 class="page-title">Learning Center</h1>
+                
+                <div class="grid-2">
+                    <!-- Learning Mode -->
+                    <div class="artifact-card accent-left-purple">
+                        <div class="card-icon-container" style="color: var(--secondary);">🧠</div>
+                        <h3>Learning Mode</h3>
+                        <p class="mb-1">Interactive learning with AI explanations and feedback. Safe environment to fail and learn.</p>
+                        
+                        <div class="topic-input-wrapper">
+                            <input type="text" id="custom-topic" placeholder="Enter any topic (e.g., Quantum Physics)">
+                            <button class="btn primary-btn" onclick="startCustomTopicQuiz()">Learn Topic</button>
+                        </div>
+
+                        <div class="pdf-upload-section">
+                            <p style="margin-bottom: 0.5rem; font-weight: 600; color: white;">Or generate from PDF notes:</p>
+                            <div style="display: flex; gap: 0.5rem; align-items: center;">
+                                <input type="file" id="pdf-file" accept=".pdf" style="padding: 0.5rem;">
+                                <button class="btn primary-btn" onclick="generateQuizFromPDF()" id="pdf-generate-btn">Extract</button>
+                            </div>
+                            <div id="pdf-generation-loading" class="hidden mt-1" style="display: flex; align-items: center; gap: 10px; color: var(--secondary);">
+                                <div class="spinner"></div>
+                                <span style="font-size: 0.85rem;">AI is reading your document...</span>
+                            </div>
+                            <div id="pdf-generation-error" class="hidden mt-1" style="color: var(--diff-hard); font-size: 0.85rem;"></div>
+                        </div>
+
+
+                        {% if categories %}
+                        <div style="margin-top: 1.5rem; border-top: 1px dashed var(--border-color); padding-top: 1.5rem;">
+                            <p style="margin-bottom: 1rem; font-weight: 600; color: white;">Resume your previous materials:</p>
+                            <div style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
+                                {% for cat in categories %}
+                                <div style="display: flex; gap: 0.2rem; align-items: center; background: rgba(255,255,255,0.03); border-radius: 8px; padding-right: 0.4rem; border: 1px solid var(--border-color);">
+                                    <button class="btn secondary-btn small-btn" style="border:none; background:transparent;" onclick="startQuiz('{{ cat }}')">{{ cat }}</button>
+                                    <button onclick="deleteCategory('{{ cat }}')" style="background:none; border:none; color:var(--diff-hard); cursor:pointer; font-size: 1.1rem; padding: 0 0.3rem;">&times;</button>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Exam Mode -->
+                    <div class="artifact-card accent-left">
+                        <div class="card-icon-container" style="color: var(--primary);">🛡️</div>
+                        <h3>Exam Mode</h3>
+                        <p class="mb-1">Secure, proctored environment. Strict time limits enforced by the system.</p>
+                        
+                        <div class="exam-list">
+                            {% if exams %}
+                                {% for exam in exams %}
+                                <div class="exam-item">
+                                    <div>
+                                        <h4 style="margin: 0; color: white; font-size: 0.95rem;">{{ exam.title }}</h4>
+                                        <div style="color: var(--text-muted); font-size: 0.75rem; margin-top: 0.2rem;">{{ exam.duration_minutes }} mins • Pass: {{ exam.passing_marks }}/{{ exam.total_marks }}</div>
+                                    </div>
+                                    <a href="/exam/{{ exam.id }}" class="btn danger-btn small-btn">Start Exam</a>
+                                </div>
+                                {% endfor %}
+                            {% else %}
+                                <p style="color: var(--text-muted); font-style: italic; font-size: 0.85rem;">No exams are currently assigned to you.</p>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Your Progress -->
+                    <div class="artifact-card accent-left-orange">
+                        <div class="card-icon-container" style="color: #ff9800;">🔥</div>
+                        <h3>Your Progress</h3>
+                        <div class="stats-container" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 1rem;">
+                            <div class="stat-box" style="background: rgba(255,152,0,0.1); padding: 1rem; border-radius: 8px; text-align: center; border: 1px solid rgba(255,152,0,0.2);">
+                                <div style="font-size: 0.75rem; color: #ff9800; font-weight: 600; text-transform: uppercase;">Current Streak</div>
+                                <div id="user-streak" style="font-size: 1.5rem; font-weight: 800; color: white;">0 Days</div>
+                            </div>
+                            <div class="stat-box" style="background: rgba(156,39,176,0.1); padding: 1rem; border-radius: 8px; text-align: center; border: 1px solid rgba(156,39,176,0.2);">
+                                <div style="font-size: 0.75rem; color: #9c27b0; font-weight: 600; text-transform: uppercase;">Total Points</div>
+                                <div id="user-points" style="font-size: 1.5rem; font-weight: 800; color: white;">0</div>
+                            </div>
+                        </div>
+                        <div style="margin-top: 1.5rem; border-top: 1px dashed var(--border-color); padding-top: 1rem;">
+                            <p style="font-weight: 600; margin-bottom: 0.5rem; font-size: 0.85rem;">Unlocked Badges:</p>
+                            <div id="badges-list" style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                                <!-- Badges will be loaded here -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Leaderboard Modal -->
+    <div id="leaderboard-modal" class="modal hidden" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000; display: flex; align-items: center; justify-content: center;">
+        <div class="modal-content artifact-card" style="width: 400px; background: #1a1a2e; border: 1px solid var(--border-color);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                <h2 style="margin: 0; color: var(--primary);">Global Leaderboard</h2>
+                <button onclick="closeLeaderboard()" style="background: none; border: none; color: white; font-size: 1.5rem; cursor: pointer;">&times;</button>
+            </div>
+            <div id="leaderboard-list" style="display: flex; flex-direction: column; gap: 0.5rem;">
+                <!-- Leaderboard entries here -->
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+    <script>
+        function startCustomTopicQuiz() {
+            const topic = document.getElementById('custom-topic').value.trim();
+            if(!topic) return alert("Please enter a topic first!");
+            localStorage.setItem('selectedCategory', topic);
+            localStorage.setItem('quizMode', 'learning');
+            window.location.href = '/quiz';
+        }
+
+        async function generateQuizFromPDF() {
+            const fileInput = document.getElementById('pdf-file');
+            if(!fileInput.files.length) return alert("Please select a PDF file");
+            
+            document.getElementById('pdf-generate-btn').disabled = true;
+            document.getElementById('pdf-generation-loading').classList.remove('hidden');
+            document.getElementById('pdf-generation-error').classList.add('hidden');
+            
+            const formData = new FormData();
+            formData.append('file', fileInput.files[0]);
+            
+            try {
+                const res = await fetch('/api/generate_quiz_from_pdf', {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await res.json();
+                if(data.success) {
+                    window.onbeforeunload = null;
+                    localStorage.setItem('selectedCategory', data.category);
+                    window.location.href = '/quiz';
+                } else {
+                    document.getElementById('pdf-generation-error').innerText = data.error;
+                    document.getElementById('pdf-generation-error').classList.remove('hidden');
+                }
+            } catch(e) {
+                document.getElementById('pdf-generation-error').innerText = "An error occurred.";
+                document.getElementById('pdf-generation-error').classList.remove('hidden');
+            } finally {
+                document.getElementById('pdf-generate-btn').disabled = false;
+                document.getElementById('pdf-generation-loading').classList.add('hidden');
+            }
+        }
+
+        async function deleteCategory(category) {
+            if(!confirm(`Delete all learned materials for "${category}"?`)) return;
+            try {
+                const res = await fetch(`/api/delete_category?category=${encodeURIComponent(category)}`, {
+                    method: 'DELETE'
+                });
+                const data = await res.json();
+                if(data.success) {
+                    window.location.reload();
+                } else {
+                    alert(data.error || "Failed to delete category");
+                }
+            } catch(e) {
+                console.error(e);
+            }
+        }
+
+    </script>
+</body>
+</html>

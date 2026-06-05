@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quizora | Learning Mode</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        .ai-feedback-section {
+            background: rgba(59, 130, 246, 0.05);
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-top: 1.5rem;
+        }
+        .ai-feedback-section.hint {
+            background: rgba(245, 158, 11, 0.05);
+            border-color: rgba(245, 158, 11, 0.2);
+        }
+    </style>
+</head>
+<body>
+    <div class="content-area" style="max-width: 800px; margin-top: 2rem;">
+        
+        <!-- Loading Screen -->
+        <div id="loading-screen" class="artifact-card text-center" style="max-width: 600px; margin: 0 auto; padding: 4rem 2rem;">
+            <div class="spinner" style="margin: 0 auto 1.5rem auto; width: 48px; height: 48px;"></div>
+            <h2 style="color: white; font-size: 1.5rem; margin-bottom: 0.5rem;">AI is crafting your next challenge</h2>
+            <p style="color: var(--text-muted);">Adapting to your previous responses...</p>
+        </div>
+
+        <!-- Question Screen -->
+        <div id="question-screen" class="hidden">
+            <div class="quiz-header">
+                <div>
+                    <h2 style="color: white; font-size: 1.25rem;">Learning Mode</h2>
+                    <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.2rem;">
+                        <span id="category-label" class="status-badge" style="border-color: var(--border-color); color: var(--text-muted); padding: 0.2rem 0.5rem; margin-right: 0.5rem; background: rgba(0,0,0,0.3);">Python</span>
+                        Question <span id="q-num">1</span> of <span id="total-q">5</span>
+                    </div>
+                </div>
+                <div class="quiz-stats">
+                    <div class="stat-box">
+                        <span class="label">Time Active</span>
+                        <span class="value" id="timer">00:00</span>
+                    </div>
+                    <div class="stat-box" style="margin-left: 1rem;">
+                        <span class="label">Difficulty</span>
+                        <span id="current-difficulty" class="value" style="color: var(--primary);">Easy</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="progress-bar">
+                <div class="progress-fill" id="progress-fill"></div>
+            </div>
+
+            <div class="artifact-card">
+                <div class="question-text" id="question-text">
+                    Loading question...
+                </div>
+                
+                <div id="options-container" style="display: flex; flex-direction: column; gap: 0.5rem;">
+                    <!-- Populated by JS -->
+                </div>
+
+                <div style="display: flex; gap: 1rem; margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px dashed var(--border-color);">
+                    <button class="btn secondary-btn small-btn" onclick="readQuestionOutLoud()" style="display: flex; align-items: center; gap: 0.5rem; color: var(--primary); border-color: rgba(59, 130, 246, 0.3);">
+                        🔊 Read Aloud
+                    </button>
+                    <button id="voice-btn" class="btn secondary-btn small-btn" onclick="startVoiceRecognition()" style="display: flex; align-items: center; gap: 0.5rem; color: var(--diff-hard); border-color: rgba(239, 68, 68, 0.3);">
+                        🎤 Dictate Answer
+                    </button>
+                </div>
+
+                <!-- AI Hint Section -->
+                <div style="text-align: right; margin-top: 1rem;">
+                    <button id="hint-btn" class="btn secondary-btn small-btn" onclick="getAIHint()" style="color: var(--accent); border-color: rgba(245, 158, 11, 0.3);">💡 Get AI Hint</button>
+                </div>
+                
+                <div id="hint-loading" class="hidden mt-1" style="display: flex; justify-content: flex-end; align-items: center; gap: 10px; color: var(--accent);">
+                    <div class="spinner small"></div> <span style="font-size: 0.85rem;">Generating hint...</span>
+                </div>
+
+                <div id="hint-section" class="ai-feedback-section hint hidden">
+                    <h3 style="color: var(--accent); font-size: 0.95rem; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;">💡 AI Hint</h3>
+                    <p id="hint-text" style="color: var(--text-muted); font-size: 0.9rem; line-height: 1.5;"></p>
+                </div>
+
+                <!-- AI Explanation Section -->
+                <div id="explanation-section" class="ai-feedback-section hidden">
+                    <h3 style="color: var(--primary); font-size: 0.95rem; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;">🧠 AI Explanation</h3>
+                    <p id="explanation-text" style="color: var(--text-muted); font-size: 0.9rem; line-height: 1.5;">Generating explanation...</p>
+                </div>
+
+                <div style="text-align: right; margin-top: 1.5rem;">
+                    <button id="next-btn" class="btn primary-btn hidden" onclick="handleNextQuestion()">Next Question ➜</button>
+                </div>
+            </div>
+            
+            <div class="text-center mt-2">
+                <button onclick="finishQuiz()" class="btn secondary-btn small-btn" style="color: var(--diff-hard); border-color: transparent;">End Quiz Early</button>
+            </div>
+        </div>
+
+        <!-- Result Screen -->
+        <div id="result-screen" class="hidden artifact-card text-center" style="max-width: 600px; margin: 0 auto;">
+            <div class="card-icon-container" style="color: var(--diff-easy); margin: 0 auto 1.5rem auto; width: 64px; height: 64px; font-size: 2rem;">✅</div>
+            <h2 style="color: white; font-size: 1.5rem; margin-bottom: 0.5rem;">Learning Session Complete</h2>
+            
+            <div class="score-circle">
+                <span id="final-score">0</span><span style="font-size: 1.5rem; color: var(--text-muted);">/<span id="final-total">0</span></span>
+            </div>
+
+            <div id="ai-loading" class="mt-1" style="display: flex; align-items: center; justify-content: center; gap: 10px; color: var(--secondary);">
+                <div class="spinner"></div>
+                <span style="font-size: 0.9rem;">AI is analyzing your performance...</span>
+            </div>
+            
+            <div style="text-align: left; background: rgba(0,0,0,0.3); padding: 1.5rem; border-radius: 12px; margin-top: 2rem; border: 1px solid var(--border-color);">
+                <h3 style="color: white; font-size: 1rem; margin-bottom: 1rem;">Personalized Feedback</h3>
+                <p id="ai-feedback-text" class="hidden" style="color: var(--text-muted); font-size: 0.9rem; line-height: 1.6;"></p>
+            </div>
+
+            <button onclick="window.location.href='/dashboard'" class="btn primary-btn mt-2" style="width: 100%;">Return to Learning Center</button>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>

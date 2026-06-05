@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quizora | Login</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="auth-wrapper">
+        <div class="auth-container">
+            <div class="auth-header">
+                <div class="sidebar-logo" style="justify-content: center; margin-bottom: 1.5rem;">
+                    <img src="{{ url_for('static', filename='img/logo.png') }}" class="logo-img" alt="Quizora Logo">
+                    <h1 style="font-size: 1.5rem;">Quizora <span class="ai-badge" style="font-size: 1.5rem;">AI</span></h1>
+                </div>
+                <p>Welcome to the Enterprise Exam Platform</p>
+            </div>
+
+            <main class="auth-forms">
+                <div class="form-container" id="login-form">
+                    <h2 class="text-center" style="color: white; font-size: 1.25rem;">Student Login</h2>
+                    <input type="email" id="login-email" placeholder="Email Address" required>
+                    <input type="password" id="login-password" placeholder="Password" required>
+                    <button class="btn primary-btn mt-1" onclick="handleAuth('login')">Log In to Learning Center</button>
+                    <p class="switch-form">Don't have an account? <span onclick="toggleForm('register')">Register here</span></p>
+                    <p class="switch-form" style="margin-top: 0.5rem;">System Admin? <span onclick="toggleForm('admin')">Admin Portal</span></p>
+                </div>
+
+                <div class="form-container hidden" id="register-form">
+                    <h2 class="text-center" style="color: white; font-size: 1.25rem;">Create Account</h2>
+                    <input type="text" id="reg-name" placeholder="Full Name" required>
+                    <input type="email" id="reg-email" placeholder="Email Address" required>
+                    <input type="password" id="reg-password" placeholder="Password" required>
+                    <button class="btn primary-btn mt-1" onclick="handleAuth('register')">Sign Up</button>
+                    <p class="switch-form">Already have an account? <span onclick="toggleForm('login')">Log in here</span></p>
+                </div>
+
+                <div class="form-container hidden" id="admin-login-form">
+                    <h2 class="text-center" style="color: var(--secondary); font-size: 1.25rem;">Admin Portal</h2>
+                    <input type="email" id="admin-email" placeholder="Admin Email Address" required>
+                    <input type="password" id="admin-password" placeholder="Password" required>
+                    <button class="btn primary-btn mt-1" onclick="handleAuth('admin_login')" style="background: var(--secondary);">Authenticate Admin</button>
+                    <p class="switch-form">Are you a student? <span onclick="toggleForm('login')">Student Login</span></p>
+                </div>
+                
+                <p id="auth-error" class="error-text hidden"></p>
+            </main>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>

@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quizora | {{ exam.title }}</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        .exam-warning {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            border-radius: 12px;
+            padding: 1.5rem;
+            text-align: center;
+            max-width: 600px;
+            margin: 2rem auto;
+            color: white;
+        }
+        #proctor-video {
+            width: 160px;
+            height: 120px;
+            border-radius: 8px;
+            background: black;
+            border: 2px solid var(--border-color);
+            position: absolute;
+            top: 2rem;
+            right: 2rem;
+            transform: scaleX(-1); /* mirror */
+            object-fit: cover;
+        }
+        .proctoring-active-badge {
+            position: absolute;
+            top: 2rem;
+            right: 200px;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--diff-hard);
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+        .proctoring-dot {
+            width: 8px;
+            height: 8px;
+            background: var(--diff-hard);
+            border-radius: 50%;
+            animation: pulse 1.5s infinite;
+        }
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+            70% { box-shadow: 0 0 0 6px rgba(239, 68, 68, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+        }
+    </style>
+</head>
+<body>
+    <div class="content-area" style="max-width: 800px; margin-top: 2rem;">
+        
+        <!-- Pre-Exam Screen -->
+        <div id="pre-exam-screen" class="artifact-card text-center" style="max-width: 600px; margin: 0 auto;">
+            <div class="card-icon-container" style="color: var(--primary); margin: 0 auto 1.5rem auto; width: 64px; height: 64px; font-size: 2rem;">🛡️</div>
+            <h1 class="page-title" style="margin-bottom: 0.5rem;">{{ exam.title }}</h1>
+            <p style="color: var(--text-muted); font-size: 1rem;">{{ exam.category }}</p>
+            
+            <div class="exam-warning">
+                <h3 style="color: var(--diff-hard); margin-bottom: 0.5rem; font-family: 'Outfit';">STRICT PROCTORING ENABLED</h3>
+                <p style="font-size: 0.9rem; margin-bottom: 1rem; color: var(--text-muted);">
+                    This is a formal examination. The following rules are strictly enforced:
+                </p>
+                <ul class="card-list" style="text-align: left; display: inline-block;">
+                    <li>Fullscreen mode is required</li>
+                    <li>Tab switching will be logged as cheating</li>
+                    <li>Webcam monitoring is active</li>
+                    <li>Time limit: {{ exam.duration_minutes }} minutes</li>
+                </ul>
+            </div>
+
+            <button class="btn primary-btn" onclick="startExam()">Acknowledge Rules & Start Exam</button>
+        </div>
+
+        <!-- Cheating Warning Modal -->
+        <div id="cheat-warning" class="hidden" style="position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 100; display: flex; align-items: center; justify-content: center; flex-direction: column; text-align: center;">
+            <h1 style="color: var(--diff-hard); font-size: 3rem; margin-bottom: 1rem; font-family: 'Outfit';">⚠️ WARNING ⚠️</h1>
+            <h2 id="cheat-text" style="color: white; margin-bottom: 2rem;">Suspicious behavior detected.</h2>
+            <button class="btn primary-btn" onclick="dismissWarning()">Return to Exam</button>
+        </div>
+
+        <!-- Exam Screen -->
+        <div id="exam-screen" class="hidden">
+            <video id="proctor-video" autoplay muted playsinline></video>
+            <div class="proctoring-active-badge">
+                <div class="proctoring-dot"></div> PROCTORING
+            </div>
+
+            <div class="quiz-header">
+                <div>
+                    <h2 style="color: white; font-size: 1.25rem;">{{ exam.title }}</h2>
+                    <div style="font-size: 0.8rem; color: var(--text-muted);">Question <span id="q-num">1</span> of <span id="total-q">0</span></div>
+                </div>
+                <div class="quiz-stats">
+                    <div class="stat-box">
+                        <span class="label">Time Remaining</span>
+                        <span class="value" id="timer" style="color: var(--diff-hard);">--:--</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="progress-bar">
+                <div class="progress-fill" id="progress-fill"></div>
+            </div>
+
+            <div id="question-container" class="artifact-card">
+                <!-- JS populated -->
+            </div>
+            
+            <div style="display: flex; justify-content: space-between; margin-top: 1.5rem;">
+                <button class="btn secondary-btn" id="prev-btn" onclick="navQuestion(-1)" disabled>Previous</button>
+                <button class="btn primary-btn" id="next-btn" onclick="navQuestion(1)">Next Question</button>
+                <button class="btn danger-btn hidden" id="submit-btn" onclick="submitExam(false)">Submit Exam</button>
+            </div>
+        </div>
+
+        <!-- Result Screen -->
+        <div id="result-screen" class="hidden artifact-card text-center" style="max-width: 600px; margin: 0 auto;">
+            <div class="card-icon-container" style="color: var(--accent); margin: 0 auto 1.5rem auto; width: 64px; height: 64px; font-size: 2rem;">🏆</div>
+            <h2 style="color: white; font-size: 1.5rem; margin-bottom: 0.5rem;">Exam Completed</h2>
+            
+            <div class="score-circle">
+                <span id="final-score">0</span><span style="font-size: 1.5rem; color: var(--text-muted);">/<span id="final-total">0</span></span>
+            </div>
+
+            <div id="ai-loading" class="mt-1" style="display: flex; align-items: center; justify-content: center; gap: 10px; color: var(--secondary);">
+                <div class="spinner"></div>
+                <span style="font-size: 0.9rem;">Processing official results...</span>
+            </div>
+            
+            <div style="text-align: left; background: rgba(0,0,0,0.3); padding: 1.5rem; border-radius: 12px; margin-top: 2rem; border: 1px solid var(--border-color);">
+                <h3 style="color: white; font-size: 1rem; margin-bottom: 1rem;">Official Transcript</h3>
+                <p id="ai-feedback-text" class="hidden" style="color: var(--text-muted); font-size: 0.9rem; line-height: 1.6;"></p>
+            </div>
+
+            <a href="/dashboard" class="btn secondary-btn mt-2" style="display: inline-block;">Return to Dashboard</a>
+        </div>
+    </div>
+
+    <script>
+        const EXAM_ID = {{ exam.id }};
+        const TOTAL_TIME = {{ exam.duration_minutes }} * 60;
+        let timeLeft = TOTAL_TIME;
+        let timerInterval;
+        let examQuestions = [];
+        let currentIdx = 0;
+        let answers = {};
+        
+        let cheatWarnings = 0;
+        const MAX_WARNINGS = 3;
+        let isExamActive = false;
+
+        async function startExam() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                document.getElementById('proctor-video').srcObject = stream;
+                
+                stream.getVideoTracks()[0].onended = function () {
+                    if (isExamActive) {
+                        triggerCheatWarning("Webcam disconnected");
+                    }
+                };
+            } catch (e) {
+                alert("Webcam access is mandatory for proctored exams.");
+                return;
+            }
+
+            try {
+                await document.documentElement.requestFullscreen();
+            } catch (e) {
+                console.log("Fullscreen request failed.");
+            }
+
+            document.getElementById('pre-exam-screen').classList.add('hidden');
+            document.getElementById('exam-screen').classList.remove('hidden');
+            
+            setupAntiCheat();
+            isExamActive = true;
+
+            await fetchQuestions();
+            startTimer();
+        }
+
+        function setupAntiCheat() {
+            document.addEventListener('visibilitychange', () => {
+                if (document.visibilityState === 'hidden' && isExamActive) {
+                    triggerCheatWarning("Tab switching detected");
+                }
+            });
+
+            document.addEventListener('contextmenu', e => e.preventDefault());
+            document.addEventListener('copy', e => {
+                e.preventDefault();
+                triggerCheatWarning("Copying text is prohibited");
+            });
+
+            document.addEventListener('fullscreenchange', () => {
+                if (!document.fullscreenElement && isExamActive) {
+                    triggerCheatWarning("Exited fullscreen mode");
+                    document.documentElement.requestFullscreen().catch(e=>console.log(e));
+                }
+            });
+        }
+
+        function triggerCheatWarning(reason) {
+            if(!isExamActive) return;
+            cheatWarnings++;
+            
+            document.getElementById('cheat-warning').classList.remove('hidden');
+            document.getElementById('cheat-text').innerText = `${reason} (Warning ${cheatWarnings}/${MAX_WARNINGS})`;
+            
+            logViolation(reason);
+
+            if (cheatWarnings >= MAX_WARNINGS) {
+                alert("Maximum warnings reached. Exam terminated. Score 0.");
+                submitExam(true);
+            }
+        }
+
+        function dismissWarning() {
+            document.getElementById('cheat-warning').classList.add('hidden');
+        }
+
+        async function logViolation(reason) {
+            await fetch('/api/proctoring_log', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ exam_id: EXAM_ID, violation: reason })
+            });
+        }
+
+        function startTimer() {
+            timerInterval = setInterval(() => {
+                if(timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    alert("Time is up! Auto-submitting exam.");
+                    submitExam(false);
+                    return;
+                }
+                timeLeft--;
+                const m = String(Math.floor(timeLeft / 60)).padStart(2, '0');
+                const s = String(timeLeft % 60).padStart(2, '0');
+                document.getElementById('timer').innerText = `${m}:${s}`;
+            }, 1000);
+        }
+
+        async function fetchQuestions() {
+            const res = await fetch(`/api/exams/${EXAM_ID}/questions`);
+            examQuestions = await res.json();
+            document.getElementById('total-q').innerText = examQuestions.length;
+            renderQuestion();
+        }
+
+        function renderQuestion() {
+            if(examQuestions.length === 0) return;
+            
+            const q = examQuestions[currentIdx];
+            document.getElementById('q-num').innerText = currentIdx + 1;
+            
+            document.getElementById('progress-fill').style.width = `${((currentIdx) / examQuestions.length) * 100}%`;
+
+            const container = document.getElementById('question-container');
+            container.innerHTML = `
+                <div class="question-text">${q.question}</div>
+                <div>
+                    <button class="option-btn ${answers[currentIdx] === 'A' ? 'selected' : ''}" onclick="selectOption('A')"><span class="option-letter">A</span> ${q.option_a}</button>
+                    <button class="option-btn ${answers[currentIdx] === 'B' ? 'selected' : ''}" onclick="selectOption('B')"><span class="option-letter">B</span> ${q.option_b}</button>
+                    <button class="option-btn ${answers[currentIdx] === 'C' ? 'selected' : ''}" onclick="selectOption('C')"><span class="option-letter">C</span> ${q.option_c}</button>
+                    <button class="option-btn ${answers[currentIdx] === 'D' ? 'selected' : ''}" onclick="selectOption('D')"><span class="option-letter">D</span> ${q.option_d}</button>
+                </div>
+            `;
+
+            document.getElementById('prev-btn').disabled = currentIdx === 0;
+            
+            if (currentIdx === examQuestions.length - 1) {
+                document.getElementById('next-btn').classList.add('hidden');
+                document.getElementById('submit-btn').classList.remove('hidden');
+            } else {
+                document.getElementById('next-btn').classList.remove('hidden');
+                document.getElementById('submit-btn').classList.add('hidden');
+            }
+        }
+
+        function selectOption(val) {
+            answers[currentIdx] = val;
+            renderQuestion();
+        }
+
+        function navQuestion(dir) {
+            currentIdx += dir;
+            renderQuestion();
+        }
+
+        async function submitExam(forceZero = false) {
+            isExamActive = false;
+            clearInterval(timerInterval);
+            if(document.fullscreenElement) document.exitFullscreen().catch(e=>console.log(e));
+
+            const stream = document.getElementById('proctor-video').srcObject;
+            if (stream) stream.getTracks().forEach(track => track.stop());
+
+            document.getElementById('exam-screen').classList.add('hidden');
+            document.getElementById('cheat-warning').classList.add('hidden');
+            document.getElementById('result-screen').classList.remove('hidden');
+
+            let rawScore = 0;
+            if(!forceZero) {
+                examQuestions.forEach((q, i) => {
+                    if(answers[i] === q.correct_answer) rawScore++;
+                });
+            }
+
+            let scaledScore = Math.round((rawScore / examQuestions.length) * {{ exam.total_marks }});
+            if (isNaN(scaledScore)) scaledScore = 0;
+
+            document.getElementById('final-score').innerText = scaledScore;
+            document.getElementById('final-total').innerText = {{ exam.total_marks }};
+            document.querySelector('.score-circle').style.setProperty('--score-pct', (scaledScore / {{ exam.total_marks }}) * 100);
+
+            try {
+                const res = await fetch('/api/submit', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        exam_id: EXAM_ID,
+                        score: scaledScore,
+                        total: {{ exam.total_marks }},
+                        category: `{{ exam.category }} ({{ exam.title }})`,
+                        type: 'exam',
+                        passing_marks: {{ exam.passing_marks }}
+                    })
+                });
+                const data = await res.json();
+                
+                document.getElementById('ai-loading').classList.add('hidden');
+                const feedbackEl = document.getElementById('ai-feedback-text');
+                feedbackEl.innerText = data.ai_feedback || "Exam transcript recorded securely.";
+                feedbackEl.classList.remove('hidden');
+            } catch (e) {
+                console.error(e);
+            }
+        }
+    </script>
+</body>
+</html>
